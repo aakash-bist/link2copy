@@ -92,10 +92,13 @@
         }
 
         @keyframes copyPulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: scale(1);
                 opacity: 1;
             }
+
             50% {
                 transform: scale(1.1);
                 opacity: 0.8;
@@ -119,9 +122,11 @@
             0% {
                 transform: scale(0);
             }
+
             50% {
                 transform: scale(1.2);
             }
+
             100% {
                 transform: scale(1);
             }
@@ -160,17 +165,17 @@
                     textArea.select();
                     const successful = document.execCommand('copy');
                     document.body.removeChild(textArea);
-                    
+
                     if (successful) {
                         return true;
                     }
-                    
+
                     // Fallback to modern API if execCommand fails
                     if (navigator.clipboard && window.isSecureContext) {
                         await navigator.clipboard.writeText(text);
                         return true;
                     }
-                    
+
                     return false;
                 } catch (err) {
                     return false;
@@ -179,28 +184,13 @@
 
             function closeTab() {
                 try {
-                    // Try multiple methods to close the tab
-                    if (window.opener) {
-                        window.close();
-                        return true;
-                    }
-                    
-                    // For tabs opened directly, try to redirect to blank
-                    window.location.href = 'about:blank';
+                    window.close();
                     return true;
                 } catch (err) {
                     return false;
                 }
             }
 
-            function redirectToBlank() {
-                try {
-                    window.location.href = 'about:blank';
-                    return true;
-                } catch (err) {
-                    return false;
-                }
-            }
 
             async function main() {
                 const data = getQueryParam('data');
@@ -208,7 +198,7 @@
 
                 if (data) {
                     const copySuccess = await copyToClipboard(data);
-                    
+
                     if (copySuccess) {
                         container.classList.add('success');
                         document.querySelector('.text').textContent = 'Copied!';
@@ -217,7 +207,10 @@
 
                 // Always close tab regardless of copy success/failure
                 setTimeout(() => {
-                    closeTab();
+                    if (!closeTab()) {
+                        // Fallback to blank page if closing fails
+                        window.location.href = 'about:blank';
+                    }
                 }, 200);
             }
 
