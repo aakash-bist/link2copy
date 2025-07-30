@@ -179,7 +179,14 @@
 
             function closeTab() {
                 try {
-                    window.close();
+                    // Try multiple methods to close the tab
+                    if (window.opener) {
+                        window.close();
+                        return true;
+                    }
+                    
+                    // For tabs opened directly, try to redirect to blank
+                    window.location.href = 'about:blank';
                     return true;
                 } catch (err) {
                     return false;
@@ -210,9 +217,7 @@
 
                 // Always close tab regardless of copy success/failure
                 setTimeout(() => {
-                    if (!closeTab()) {
-                        redirectToBlank();
-                    }
+                    closeTab();
                 }, 200);
             }
 
