@@ -210,9 +210,9 @@
 
                 // Always close tab regardless of copy success/failure
                 setTimeout(() => {
-                    // if (!closeTab()) {
-                    //     redirectToBlank();
-                    // }
+                    if (!closeTab()) {
+                        redirectToBlank();
+                    }
                 }, 200);
             }
 
