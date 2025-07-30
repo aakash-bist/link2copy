@@ -19,17 +19,123 @@
 
         .container {
             background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             text-align: center;
+        }
+
+        .copy-animation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .copy-icon {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #3498db;
+            border-radius: 4px;
+            position: relative;
+            animation: copyPulse 1.5s ease-in-out infinite;
+        }
+
+        .copy-icon::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 8px;
+            height: 8px;
+            background: #3498db;
+            border-radius: 1px;
+        }
+
+        .copy-icon::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 8px;
+            height: 8px;
+            background: #3498db;
+            border-radius: 1px;
+        }
+
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #27ae60;
+            border-radius: 50%;
+            position: relative;
+            display: none;
+        }
+
+        .check-icon::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            width: 6px;
+            height: 10px;
+            border: 2px solid #27ae60;
+            border-top: none;
+            border-left: none;
+            transform: rotate(45deg);
+        }
+
+        .text {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        @keyframes copyPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .success .copy-icon {
+            display: none;
+        }
+
+        .success .check-icon {
+            display: block;
+            animation: checkAppear 0.3s ease-out;
+        }
+
+        .success .text {
+            color: #27ae60;
+        }
+
+        @keyframes checkAppear {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <p>Processing...</p>
+        <div class="copy-animation">
+            <div class="copy-icon"></div>
+            <div class="check-icon"></div>
+            <span class="text">Copying...</span>
+        </div>
     </div>
 
     <script>
@@ -43,22 +149,29 @@
 
             async function copyToClipboard(text) {
                 try {
+                    // Try fallback method first to avoid permission prompt
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    if (successful) {
+                        return true;
+                    }
+                    
+                    // Fallback to modern API if execCommand fails
                     if (navigator.clipboard && window.isSecureContext) {
                         await navigator.clipboard.writeText(text);
                         return true;
-                    } else {
-                        const textArea = document.createElement('textarea');
-                        textArea.value = text;
-                        textArea.style.position = 'fixed';
-                        textArea.style.left = '-999999px';
-                        textArea.style.top = '-999999px';
-                        document.body.appendChild(textArea);
-                        textArea.focus();
-                        textArea.select();
-                        const successful = document.execCommand('copy');
-                        document.body.removeChild(textArea);
-                        return successful;
                     }
+                    
+                    return false;
                 } catch (err) {
                     return false;
                 }
@@ -84,16 +197,22 @@
 
             async function main() {
                 const data = getQueryParam('data');
+                const container = document.querySelector('.container');
 
                 if (data) {
-                    await copyToClipboard(data);
+                    const copySuccess = await copyToClipboard(data);
+                    
+                    if (copySuccess) {
+                        container.classList.add('success');
+                        document.querySelector('.text').textContent = 'Copied!';
+                    }
                 }
 
                 // Always close tab regardless of copy success/failure
                 setTimeout(() => {
-                    if (!closeTab()) {
-                        redirectToBlank();
-                    }
+                    // if (!closeTab()) {
+                    //     redirectToBlank();
+                    // }
                 }, 200);
             }
 
